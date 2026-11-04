@@ -5,7 +5,10 @@ from pydantic import BaseModel
 app = FastAPI(title="Order Service")
 
 # Product Service address
-PRODUCT_SERVICE_URL = "http://localhost:8001"
+PRODUCT_SERVICE_URL = "http://product-service:8001"
+
+# Customer Service Address
+CUSTOMER_SERVICE_URL = "http://customer-service:8003"
 
 # Sample order storage
 orders = []
@@ -15,6 +18,7 @@ orders = []
 class OrderRequest(BaseModel):
     product_id: int
     quantity: int
+    customer_id: int
 
 
 @app.get("/")
@@ -29,6 +33,7 @@ def health():
 
 @app.post("/orders")
 def create_order(order: OrderRequest):
+    customer = get_customer_or_fail(order.customer_id)
     # Contact Product Service
     try:
         response = requests.get(
@@ -55,6 +60,9 @@ def create_order(order: OrderRequest):
 
     # Create order
     new_order = {
+        # ... existing fields ...
+        "customer_id": customer["id"],
+        "customer_name": customer["name"],
         "order_id": len(orders) + 1,
         "product_id": product["id"],
         "product_name": product["name"],
@@ -65,6 +73,20 @@ def create_order(order: OrderRequest):
     orders.append(new_order)
 
     return {"message": "Order created successfully", "order": new_order}
+
+
+def get_customer_or_fail(customer_id: int):
+    try:
+        response = requests.get(
+            f"{CUSTOMER_SERVICE_URL}/customers/{customer_id}", timeout=5
+        )
+    except requests.exceptions.RequestException:
+        raise HTTPException(status_code=503, detail="Customer Service unavailable")
+
+    if response.status_code == 404:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    response.raise_for_status()
+    return response.json()
 
 
 @app.get("/orders")
