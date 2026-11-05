@@ -23,6 +23,44 @@ customers = {
 next_id = 3
 
 
+# Database connection functions
+def get_conn():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+
+def init_db():
+    conn = get_conn()
+    try:
+        with conn, conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS customers (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    email TEXT NOT NULL
+                )
+            """)
+
+            cur.execute("""
+                INSERT INTO customers (name, email)
+                SELECT * FROM (VALUES
+                    ('Alice Tan', 'alice@example.com'),
+                    ('Bob Lee', 'bob@example.com')
+                ) AS seed(name, email)
+                WHERE NOT EXISTS (SELECT 1 FROM customers)
+            """)
+    finally:
+        conn.close()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+# REST API functions
+
+
 @app.get("/customers")
 def get_customers():
     return list(customers.values())
