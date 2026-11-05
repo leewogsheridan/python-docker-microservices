@@ -40,7 +40,13 @@ services:
       - "8003:8003"
     networks:
       - ecommerce-network
-
+    environment:
+      - DATABASE_URL=postgresql://appuser:apppassword@postgres:5432/customers_db=value
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:
 networks:
   ecommerce-network:
     driver: bridge
