@@ -59,16 +59,28 @@ async def lifespan(app: FastAPI):
 
 
 # REST API functions
-
-
 @app.get("/customers")
 def get_customers():
-    return list(customers.values())
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, name, email FROM customers ORDER BY id")
+            return cur.fetchall()
+    finally:
+        conn.close()
 
 
 @app.get("/customers/{customer_id}")
 def get_customer(customer_id: int):
-    customer = customers.get(customer_id)
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, name, email FROM customers WHERE id = %s", (customer_id,)
+            )
+            customer = cur.fetchone()
+    finally:
+        conn.close()
     if customer is None:
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
@@ -76,8 +88,13 @@ def get_customer(customer_id: int):
 
 @app.post("/customers", status_code=201)
 def register_customer(customer: CustomerCreate):
-    global next_id
-    new_customer = {"id": next_id, **customer.model_dump()}
-    customers[next_id] = new_customer
-    next_id += 1
-    return new_customer
+    conn = get_conn()
+    try:
+        with conn, conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO customers (name, email) VALUES (%s, %s) RETURNING id, name, email",
+                (customer.name, customer.email),
+            )
+            return cur.fetchone()
+    finally:
+        conn.close()
