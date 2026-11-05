@@ -1,5 +1,12 @@
+import os
+from contextlib import asynccontextmanager
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI(title="Customer Service")
 
