@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - ecommerce-network
   product-service:
     build: ./product-service
     container_name: product-service
@@ -41,7 +43,7 @@ services:
     networks:
       - ecommerce-network
     environment:
-      - DATABASE_URL=postgresql://appuser:apppassword@postgres:5432/customers_db=value
+      - DATABASE_URL=postgresql://appuser:apppassword@postgres:5432/customers_db
     depends_on:
       postgres:
         condition: service_healthy
