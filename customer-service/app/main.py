@@ -8,7 +8,14 @@ from pydantic import BaseModel
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-app = FastAPI(title="Customer Service")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Customer Service", lifespan=lifespan)
 
 
 class CustomerCreate(BaseModel):
@@ -50,12 +57,6 @@ def init_db():
             """)
     finally:
         conn.close()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_db()
-    yield
 
 
 # REST API functions
