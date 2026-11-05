@@ -1,4 +1,19 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+      POSTGRES_DB: customers_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"        # optional: only needed to connect from your PC (e.g. pgAdmin)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d customers_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   product-service:
     build: ./product-service
     container_name: product-service
