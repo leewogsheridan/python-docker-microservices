@@ -29,6 +29,9 @@ services:
     container_name: order-service
     ports:
       - "8002:8002"
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:8001
+      - CUSTOMER_SERVICE_URL=http://customer-service:8003
     depends_on:
       - product-service
       - customer-service

@@ -1,14 +1,15 @@
 import requests
+import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI(title="Order Service")
 
 # Product Service address
-PRODUCT_SERVICE_URL = "http://product-service:8001"
+PRODUCT_SERVICE_URL = os.getenv("PRODUCT_SERVICE_URL")
 
 # Customer Service Address
-CUSTOMER_SERVICE_URL = "http://customer-service:8003"
+CUSTOMER_SERVICE_URL = os.getenv("CUSTOMER_SERVICE_URL")
 
 # Sample order storage
 orders = []
